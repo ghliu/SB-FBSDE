@@ -1,7 +1,13 @@
+# Generation results
+results/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
+*__pycache__/
 *.py[cod]
 *$py.class
+
+scripts/*
 
 # C extensions
 *.so
@@ -127,3 +133,13 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+data/*
+checkpoint/*
+plots/*
+*vscode/*
+deprecated.py
+runs/*
+.DS_Store
+._.DS_Store
