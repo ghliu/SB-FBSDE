@@ -1,4 +1,4 @@
-# Likelihood Training of Schrödinger Bridge using Forward-Backward SDEs Theory [[ICLR 2022](https://arxiv.org/pdf/2110.11291.pdf)]
+# Likelihood Training of Schrödinger Bridge using Forward-Backward SDEs Theory [[ICLR 2022](https://openreview.net/pdf?id=nioAdKCEdXB)]
 
 Official PyTorch implementation of the paper 
 "_Likelihood Training of <ins>**S**</ins>chrödinger <ins>**B**</ins>ridge using <ins>**F**</ins>orward-<ins>**B**</ins>ackward <ins>**SDE**</ins>s Theory_ (**SB-FBSDE**)" which introduces
