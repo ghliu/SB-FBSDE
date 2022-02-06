@@ -45,7 +45,7 @@ To train an SB-FBSDE from scratch, run the above command, where
 - `log-tb` enables logging with Tensorboard.
 
 Additionally, use `--load <LOAD>` to restore previous checkpoint or pre-trained model.
-For training CIFAR-10 specifically, we support loading the pre-trained [NCSN++](https://drive.google.com/drive/folders/1sP4GwvrYiI-sDPTp7sKYzsxJLGVamVMZ) as the backward policy of the first SB training stage (this is because the first SB training stage can degenerate to denoising score matching under proper initialization; see more details in [Appendix D of our paper](https://arxiv.org/pdf/2110.11291.pdf)).
+For training CIFAR-10 specifically, we support loading the pre-trained [NCSN++](https://drive.google.com/drive/folders/1sP4GwvrYiI-sDPTp7sKYzsxJLGVamVMZ) as the backward policy of the first SB training stage (this is because the first SB training stage can degenerate to denoising score matching under proper initialization; see more details in [Appendix D of our paper](https://openreview.net/pdf?id=nioAdKCEdXB)).
 
 
 Other configurations are detailed in [`options.py`](https://github.com/ghliu/SB-FBSDE/blob/main/options.py). The default configurations for each dataset are provided in the [`configs`](https://github.com/ghliu/SB-FBSDE/blob/main/configs) folder. 
