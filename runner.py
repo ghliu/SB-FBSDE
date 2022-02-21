@@ -174,14 +174,13 @@ class Runner():
             optimizer.zero_grad()
             xs.requires_grad_(True) # we need this due to the later autograd.grad
 
-            # -------- handle for image ---------
-            if util.is_image_dataset(opt):
-                # (batch, T, xdim) --> (batch*T, xdim)
-                xs      = util.flatten_dim01(xs)
-                zs_impt = util.flatten_dim01(zs_impt)
-                ts = ts.repeat(opt.train_bs_x)
-                assert xs.shape[0] == ts.shape[0]
-                assert zs_impt.shape[0] == ts.shape[0]
+            # -------- handle for batch_x and batch_t ---------
+            # (batch, T, xdim) --> (batch*T, xdim)
+            xs      = util.flatten_dim01(xs)
+            zs_impt = util.flatten_dim01(zs_impt)
+            ts = ts.repeat(opt.train_bs_x)
+            assert xs.shape[0] == ts.shape[0]
+            assert zs_impt.shape[0] == ts.shape[0]
 
             # -------- compute loss and backprop --------
             loss, zs = compute_sb_nll_alternate_train(
@@ -259,10 +258,7 @@ class Runner():
 
     def sb_alternate_train(self, opt):
         for stage in range(opt.num_stage):
-            # Note: first stage of forward policy must converge;
-            # otherwise it will mislead backward policy
-            forward_ep = 15 if stage==0 else opt.num_epoch
-            backward_ep = opt.num_epoch
+            forward_ep = backward_ep = opt.num_epoch
 
             # train backward policy;
             # skip the trainining at first stage if checkpoint is loaded
@@ -270,6 +266,11 @@ class Runner():
             if train_backward:
                 if stage == 0 and opt.DSM_warmup:
                     self.dsm_train_first_stage(opt)
+
+                    # A heuristic that, since DSM training can be quite long, we bump up
+                    # the epoch of its following forward policy training, so that forward
+                    # training can converge; otherwise it may mislead backward policy.
+                    forward_ep *= 3 # for CIFAR10, this bump ep from 5 to 15
                 else:
                     self.sb_alternate_train_stage(opt, stage, backward_ep, 'backward')
 
@@ -324,7 +325,7 @@ class Runner():
             if (it+1)%opt.eval_itr==0:
                 with torch.no_grad():
                     xs_b, _, _ = self.dyn.sample_traj(ts, policy_b, save_traj=True)
-                util.save_toy_npy_traj(opt, it+1, xs_b.detach().cpu().numpy())
+                util.save_toy_npy_traj(opt, 'train_it{}'.format(it+1), xs_b.detach().cpu().numpy())
 
     @torch.no_grad()
     def _generate_samples_and_reused_trajs(self, opt, batch, n_samples, n_trajs):
@@ -372,7 +373,7 @@ class Runner():
         print(util.yellow("=================== NLL={} ======================").format(np.array(bpds).mean()))
 
     @torch.no_grad()
-    def evaluate(self, opt, stage, n_reused_trajs=0, metrics=None):
+    def evaluate_img_dataset(self, opt, stage, n_reused_trajs=0, metrics=None):
         assert util.is_image_dataset(opt)
 
         fid, snapshot, ckpt = util.evaluate_stage(opt, stage, metrics)
@@ -408,6 +409,27 @@ class Runner():
         if trajs is not None:
             trajs = trajs.reshape(-1, batch, *trajs.shape[1:])
             return util.create_traj_sampler(trajs)
+
+    @torch.no_grad()
+    def evaluate(self, opt, stage, n_reused_trajs=0, metrics=None):
+        if util.is_image_dataset(opt):
+            return self.evaluate_img_dataset(
+                opt, stage, n_reused_trajs=n_reused_trajs, metrics=metrics
+            )
+        elif util.is_toy_dataset(opt):
+            _, snapshot, ckpt = util.evaluate_stage(opt, stage, metrics=None)
+            if snapshot:
+                for z in [self.z_f, self.z_b]:
+                    z = freeze_policy(z)
+                    xs, _, _ = self.dyn.sample_traj(self.ts, z, save_traj=True)
+
+                    fn = "stage{}-{}".format(stage, z.direction)
+                    util.save_toy_npy_traj(
+                        opt, fn, xs.detach().cpu().numpy(), n_snapshot=5, direction=z.direction
+                    )
+            if ckpt:
+                keys = ['z_f','optimizer_f','ema_f','z_b','optimizer_b','ema_b']
+                util.save_checkpoint(opt, self, keys, stage)
 
     def _print_train_itr(self, it, loss, optimizer, num_itr, name):
         time_elapsed = util.get_time(time.time()-self.start_time)

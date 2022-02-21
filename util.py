@@ -35,7 +35,7 @@ def is_image_dataset(opt):
     return opt.problem_name in ['mnist','cifar10','celebA32','celebA64']
 
 def is_toy_dataset(opt):
-    return opt.problem_name in ['gmm','checkerboard']
+    return opt.problem_name in ['gmm','checkerboard', 'moon-to-spiral']
 
 def use_vp_sde(opt):
     return opt.sde_type == 'vp'
@@ -140,20 +140,34 @@ def save_checkpoint(opt, runner, keys, stage_it, dsm_train_it=None):
         torch.save(checkpoint, fn)
     print(green("checkpoint saved: {}".format(fn)))
 
-def save_toy_npy_traj(opt, train_it, traj):
+def save_toy_npy_traj(opt, fn, traj, n_snapshot=None, direction=None):
     #form of traj: [bs, interval, x_dim=2]
-    fn_npy = os.path.join(opt.generated_data_path, 'train_it{}.npy'.format(train_it))
-    fn_pdf = os.path.join(opt.generated_data_path, 'train_it{}.pdf'.format(train_it))
-
-    plt.scatter(traj[:,0,0],traj[:,0,1], s=5)
+    fn_npy = os.path.join('results', opt.dir, fn+'.npy')
+    fn_pdf = os.path.join('results', opt.dir, fn+'.pdf')
 
     lims = {
         'gmm': [-17, 17],
         'checkerboard': [-7, 7],
+        'moon-to-spiral':[-20, 20],
     }.get(opt.problem_name)
 
-    plt.xlim(*lims)
-    plt.ylim(*lims)
+    if n_snapshot is None: # only store t=0
+        plt.scatter(traj[:,0,0],traj[:,0,1], s=5)
+        plt.xlim(*lims)
+        plt.ylim(*lims)
+    else:
+        total_steps = traj.shape[1]
+        sample_steps = np.linspace(0, total_steps-1, n_snapshot).astype(int)
+        fig, axs = plt.subplots(1, n_snapshot)
+        fig.set_size_inches(n_snapshot*6, 6)
+        color = 'salmon' if direction=='forward' else 'royalblue'
+        for ax, step in zip(axs, sample_steps):
+            ax.scatter(traj[:,step,0],traj[:,step,1], s=5, color=color)
+            ax.set_xlim(*lims)
+            ax.set_ylim(*lims)
+            ax.set_title('time = {:.2f}'.format(step/(total_steps-1)*opt.T))
+        fig.tight_layout()
+
     plt.savefig(fn_pdf)
     np.save(fn_npy, traj)
     plt.clf()
