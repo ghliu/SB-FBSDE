@@ -1,12 +1,8 @@
-# Likelihood Training of Schrödinger Bridge using Forward-Backward SDEs Theory [[ICLR 2022](https://openreview.net/pdf?id=nioAdKCEdXB)]
+# SB-FBSDE: Likelihood Training of Schrödinger Bridge using Forward-Backward SDEs Theory [[ICLR 2022](https://openreview.net/pdf?id=nioAdKCEdXB)]
 
 Official PyTorch implementation of the paper 
 "_Likelihood Training of <ins>**S**</ins>chrödinger <ins>**B**</ins>ridge using <ins>**F**</ins>orward-<ins>**B**</ins>ackward <ins>**SDE**</ins>s Theory_ (**SB-FBSDE**)" which introduces
 a new class of deep generative models that generalizes score-based models to fully nonlinear forward and backward diffusions.
-
-<p align="center">
-<img align="middle" src="./assets/schrodinger-bridge.gif" alt="SB-FBSDE result" width="400" />
-</p>
 
 This repo is co-maintained by [Guan-Horng Liu](https://ghliu.github.io/) and [Tianrong Chen](https://tianrongchen.github.io/). Contact us if you have any questions! If you find this library useful, please cite :arrow_down:
 ```
@@ -17,6 +13,15 @@ This repo is co-maintained by [Guan-Horng Liu](https://ghliu.github.io/) and [Ti
   year={2022}
 }
 ```
+
+## Examples
+
+| p0 ⇆ pT (`--problem-name`)  | Results (blue/left: p0 ← pT, red/right: p0 → pT) |
+|-------------------------|-------------------------|
+| Mixture Gaussians ⇆ Gaussian (`gmm`) | <img src="./assets/gmm.png" alt="drawing" width="400"/> |
+| CheckerBoard ⇆ Gaussian (`checkerboard`) | <img src="./assets/checkerboard.png" alt="drawing" width="400"/> | 
+| Spiral ⇆ Moon (`moon-to-spiral`) | <img src="./assets/spiral.png" alt="drawing" width="400"/> | 
+| CIFAR-10 ⇆ Gaussian (`cifar10`) | <p float="left"> <img src="./assets/cifar10-forward.gif" alt="drawing" width="180"/>  <img src="./assets/cifar10-backward.gif" alt="drawing" width="180"/> </p> |
 
 ## Installation
 
@@ -38,7 +43,7 @@ python main.py \
   --log-tb 
 ```
 To train an SB-FBSDE from scratch, run the above command, where
-- `PROBLEM_NAME` is the dataset. We support `gmm` (2D mixture of Gaussian), `checkerboard` (2D toy dataset), `mnist`, `celebA32`, `celebA64`, `cifar10`.
+- `PROBLEM_NAME` is the dataset. We support `gmm` (2D mixture of Gaussian), `checkerboard` (2D toy dataset), `moon-to-spiral`, `mnist`, `celebA32`, `celebA64`, `cifar10`.
 - `FORWARD_NET` & `BACKWARD_NET` are the deep networks for forward and backward drifts. We support `Unet`, `nscnpp`, and a `toy` network for 2D datasets.
 - `NUM_FID_SAMPLE` is the number of generated images used to evaluate FID locally. We recommend 10000 for training CIFAR-10. Note that this requires first downloading the [FID statistics checkpoint](https://github.com/ghliu/SB-FBSDE#evaluating-the-cifar-10-checkpoint). 
 - `DIR` specifies where the results (e.g. snapshots during training) shall be stored.
